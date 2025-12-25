@@ -185,4 +185,9 @@ client.on('messageCreate', async (message) => {
     }
 });
 
+// --- DEBUGGING ---
+console.log('Value of process.env.BOT_TOKEN:', process.env.BOT_TOKEN);
+console.log('Type of process.env.BOT_TOKEN:', typeof process.env.BOT_TOKEN);
+// --- END DEBUGGING ---
+
 client.login(process.env.BOT_TOKEN);
